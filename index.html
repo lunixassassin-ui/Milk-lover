@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moshar Maramari PRO 🦟</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0a0a;color:white;font-family:sans-serif;text-align:center;overflow:hidden}
+  h1{margin:15px 0 5px;font-size:26px}
+  .top{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:17px}
+  .top span{color:#00ff88;font-weight:bold}
+  #game{width:94%;height:62vh;margin:12px auto;position:relative;background:radial-gradient(circle,#222,#111);border:2px solid #00ff88;border-radius:18px;overflow:hidden}
+  .mosha{position:absolute;font-size:42px;cursor:pointer;user-select:none}
+  .boss{font-size:65px!important}
+  button{padding:13px 28px;font-size:18px;background:#00ff88;border:none;border-radius:12px;font-weight:bold;cursor:pointer}
+  button:active{transform:scale(0.95)}
+  #msg{margin-top:10px;color:#ffcc00;font-size:16px;min-height:22px}
+  #levelBar{width:94%;height:10px;background:#333;margin:0 auto;border-radius:10px;overflow:hidden}
+  #levelFill{height:100%;width:0%;background:#00ff88;transition:0.3s}
+</style>
+</head>
+<body>
+<h1>🦟 MOSHAR MARAMARI PRO</h1>
+<div class="top">
+  <div>Score: <span id="score">0</span></div>
+  <div>High: <span id="high">0</span></div>
+  <div>Level: <span id="level">1</span></div>
+  <div>Time: <span id="time">30</span>s</div>
+</div>
+<div id="levelBar"><div id="levelFill"></div></div>
+<div id="game"></div>
+<button id="btn" onclick="startGame()">🔥 GAME START</button>
+<p id="msg">Moshar upor tap koro! Boss mosha asle 5 point!</p>
+
+<script>
+let score=0, high=localStorage.getItem('moshaHigh')||0, timeLeft=30, level=1, gameInterval, timerInterval;
+document.getElementById('high').innerText=high;
+
+function playSound(freq){
+  try{
+    let ctx=new (window.AudioContext||window.webkitAudioContext)();
+    let o=ctx.createOscillator(); let g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value=freq; o.type='square';
+    g.gain.value=0.08; o.start(); o.stop(ctx.currentTime+0.08);
+  }catch(e){}
+}
+
+function startGame(){
+  score=0; timeLeft=30; level=1;
+  document.getElementById('score').innerText=score;
+  document.getElementById('time').innerText=timeLeft;
+  document.getElementById('level').innerText=level;
+  document.getElementById('levelFill').style.width='0%';
+  document.getElementById('msg').innerText='Mar mar! Mosha palaitese!';
+  document.getElementById('btn').innerText='RESTART';
+  clearInterval(gameInterval); clearInterval(timerInterval);
+  gameInterval=setInterval(spawnMosha, 700);
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('time').innerText=timeLeft;
+    if(timeLeft<=0) endGame();
+  },1000);
+}
+
+function endGame(){
+  clearInterval(gameInterval); clearInterval(timerInterval);
+  document.getElementById('game').innerHTML='';
+  if(score>high){ high=score; localStorage.setItem('moshaHigh',high); document.getElementById('high').innerText=high; document.getElementById('msg').innerText='🏆 NEW HIGH SCORE! '+score+' ta mosha marso! Screenshot dao!'; }
+  else{ document.getElementById('msg').innerText='Khela Shesh! Score: '+score+' | High: '+high; }
+  playSound(200);
+}
+
+function spawnMosha(){
+  let game=document.getElementById('game');
+  let m=document.createElement('div');
+  let isBoss=Math.random()<0.15;
+  m.className='mosha'+(isBoss?' boss':'');
+  m.innerText=isBoss?'🦟👑':'🦟';
+  m.style.left=Math.random()*85+'%';
+  m.style.top=Math.random()*78+'%';
+  m.onclick=function(){
+    let point=isBoss?5:1;
+    score+=point;
+    document.getElementById('score').innerText=score;
+    playSound(isBoss?900:600);
+    // Level up
+    if(score>=10 && level==1){ level=2; clearInterval(gameInterval); gameInterval=setInterval(spawnMosha,500); document.getElementById('level').innerText=level; document.getElementById('msg').innerText='Level 2! Mosha aro fast!'; }
+    if(score>=25 && level==2){ level=3; clearInterval(gameInterval); gameInterval=setInterval(spawnMosha,350); document.getElementById('level').innerText=level; document.getElementById('msg').innerText='Level 3 FINAL! Bachaite parba na!'; }
+    document.getElementById('levelFill').style.width=Math.min(score*3,100)+'%';
+    m.innerText='💥';
+    setTimeout(()=>m.remove(),150);
+  };
+  game.appendChild(m);
+  setTimeout(()=>{if(m.parentNode) m.remove()},1800);
+}
+</script>
+</body>
+</html>
